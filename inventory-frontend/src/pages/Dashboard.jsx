@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import CreatableSelect from 'react-select/creatable';
-import { components } from 'react-select';
+import { Pencil, Trash2 } from 'lucide-react'; // Use `Pencil` for Edit
+import * as XLSX from 'xlsx';
 
 const Dashboard = () => {
     const [summary, setSummary] = useState({ totalStock: 0, totalValue: 0 });
+    const [searchTerm, setSearchTerm] = useState('');
+    const [dateFilter, setDateFilter] = useState('');
+
     const [products, setProducts] = useState([]);
     const [types, setTypes] = useState([]);
     const [filterType, setFilterType] = useState('All');
@@ -18,6 +21,23 @@ const Dashboard = () => {
         name: '', sku: '', quantity: '', price: '', expiryDate: '', supplier: '', type: ''
     });
     const [editingId, setEditingId] = useState(null);
+    const handleDownloadExcel = () => {
+        const exportData = products.map(p => ({
+            Name: p.name,
+            SKU: p.sku,
+            Quantity: p.quantity,
+            Price: p.price,
+            ExpiryDate: p.expiryDate ? new Date(p.expiryDate).toLocaleDateString('en-GB') : '',
+            Supplier: p.supplier,
+            Type: p.type,
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Products');
+
+        XLSX.writeFile(workbook, 'products.xlsx');
+    };
 
     useEffect(() => {
         fetchProducts();
@@ -201,7 +221,7 @@ const Dashboard = () => {
     //     );
     // };
     return (
-        <div className="p-4">
+        <div className="p-0">
             <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
 
             {/* Summary */}
@@ -217,11 +237,11 @@ const Dashboard = () => {
             </div> */}
 
             {/* Type Management */}
-            <div className="relative bg-white p-4 rounded shadow mb-6 w-80">
+            <div className="relative bg-white p-4 rounded shadow mb-6 w-96">
                 <h2 className="font-semibold text-lg mb-2">Manage Types</h2>
                 <div className="flex gap-2 mb-2">
                     <input
-                        className="border px-2 py-1 rounded w-full"
+                        className="bg-gray-200 px-2 py-2 rounded w-full"
                         placeholder="Search or Type name"
                         value={typeInput}
                         onChange={(e) => setTypeInput(e.target.value)}
@@ -229,7 +249,7 @@ const Dashboard = () => {
                     />
                     <button
                         onClick={handleAddOrEditType}
-                        className={`text-white px-4 py-1 rounded ${editTypeId ? 'bg-green-600' : 'bg-blue-600'}`}
+                        className={`text-white px-4 py-1 rounded ${editTypeId ? 'bg-teal-600 hover:bg-teal-700' : 'bg-teal-600 hover:bg-teal-700'}`}
                     >
                         {editTypeId ? 'Save' : 'Add'}
                     </button>
@@ -270,19 +290,19 @@ const Dashboard = () => {
             <div className="bg-white p-6 rounded shadow mb-8">
                 <h2 className="text-xl font-bold mb-4">{editingId ? 'Edit Product' : 'Add New Product'}</h2>
                 <form onSubmit={handleSubmit} className="grid grid-cols-8 gap-4">
-                    <input name="name" value={form.name} onChange={handleChange} className="border p-2 rounded" placeholder="Product Name" />
-                    <input name="sku" value={form.sku} onChange={handleChange} className="border p-2 rounded" placeholder="SKU" />
-                    <input name="quantity" value={form.quantity} onChange={handleChange} type="number" className="border p-2 rounded" placeholder="Quantity" />
-                    <input name="price" value={form.price} onChange={handleChange} type="number" step="0.01" className="border p-2 rounded" placeholder="Price" />
-                    <input name="expiryDate" value={form.expiryDate} onChange={handleChange} type="date" className="border p-2 rounded" />
-                    <input name="supplier" value={form.supplier} onChange={handleChange} className="border p-2 rounded" placeholder="Supplier Name" />
-                    <select name="type" value={form.type} onChange={handleChange} className="border p-2 rounded">
+                    <input name="name" value={form.name} onChange={handleChange} className="bg-gray-200 p-2 rounded" placeholder="Product Name" />
+                    <input name="sku" value={form.sku} onChange={handleChange} className="bg-gray-200 p-2 rounded" placeholder="SKU" />
+                    <input name="quantity" value={form.quantity} onChange={handleChange} type="number" className="bg-gray-200 p-2 rounded" placeholder="Quantity" />
+                    <input name="price" value={form.price} onChange={handleChange} type="number" step="0.01" className="bg-gray-200 p-2 rounded" placeholder="Price" />
+                    <input name="expiryDate" value={form.expiryDate} onChange={handleChange} type="date" className="bg-gray-200 p-2 rounded" />
+                    <input name="supplier" value={form.supplier} onChange={handleChange} className="bg-gray-200 p-2 rounded" placeholder="Supplier Name" />
+                    <select name="type" value={form.type} onChange={handleChange} className="bg-gray-200 p-2 rounded">
                         <option value="">Select Type</option>
                         {types.map((t) => (
                             <option key={t.id} value={t.name}>{t.name}</option>
                         ))}
                     </select>
-                    <button type="submit" className="bg-blue-600 text-white py-2 px-4 rounded">
+                    <button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white py-2 px-4 rounded">
                         {editingId ? 'Update' : 'Add'}
                     </button>
                     {editingId && (
@@ -299,7 +319,7 @@ const Dashboard = () => {
                 <select
                     value={filterType}
                     onChange={(e) => setFilterType(e.target.value)}
-                    className="border p-2 rounded"
+                    className="bg-gray-200 p-2 rounded"
                 >
                     <option value="All">All</option>
                     {types.map((t) => (
@@ -309,24 +329,70 @@ const Dashboard = () => {
             </div>
 
             {/* Product Table */}
-            <h2 className="text-xl font-bold mb-4">Product List</h2>
-            <div className="overflow-y-auto max-h-56 w-full border border-gray-200 rounded">
+            <div className='flex justify-between items-center'>
+                <div>
+                    <h2 className="text-xl font-bold mb-4">Product List</h2>
+                </div>
+                <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input
+                        type="text"
+                        placeholder="🔍 Search by Name or SKU"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="bg-gray-200 p-2 rounded w-full"
+                    />
+                    <input
+                        type="date"
+                        value={dateFilter}
+                        onChange={(e) => setDateFilter(e.target.value)}
+                        className="bg-gray-200 p-2 rounded w-full"
+                    />
+                    <button
+                        onClick={() => {
+                            setSearchTerm('');
+                            setDateFilter('');
+                        }}
+                        className="bg-gray-500 text-white px-4 py-2 rounded w-full"
+                    >
+                        🔄 Reset Filters
+                    </button>
+                </div>
+
+                <div>
+                    <div className="flex justify-end mb-4">
+                        <button
+                            onClick={handleDownloadExcel}
+                            className="bg-white border border-teal-600 text-teal-700 px-4 py-2 rounded hover:bg-teal-600 hover:text-white transition"
+                        >
+                            ⬇️ Download Excel
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+            <div className="overflow-y-auto max-h-56 w-full border bg-gray-200 rounded">
                 <table className="min-w-full">
-                    <thead className="bg-gray-100 sticky top-0">
+                    <thead className=" bg-teal-600 text-white sticky top-0">
                         <tr>
-                            <th className="p-2 border">Name</th>
-                            <th className="p-2 border">SKU</th>
-                            <th className="p-2 border">Qty</th>
-                            <th className="p-2 border">Price</th>
-                            <th className="p-2 border">Expiry</th>
-                            <th className="p-2 border">Supplier</th>
-                            <th className="p-2 border">Type</th>
-                            <th className="p-2 border">Actions</th>
+                            <th className="p-2 ">Name</th>
+                            <th className="p-2 ">SKU</th>
+                            <th className="p-2 ">Qty</th>
+                            <th className="p-2 ">Price</th>
+                            <th className="p-2 ">Expiry</th>
+                            <th className="p-2 ">Supplier</th>
+                            <th className="p-2 ">Type</th>
+                            <th className="p-2 ">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {products
-                            .filter(p => filterType === 'All' || p.type === filterType)
+                            .filter((p) =>
+                                (filterType === 'All' || p.type === filterType) &&
+                                (p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                    p.sku.toLowerCase().includes(searchTerm.toLowerCase())) &&
+                                (!dateFilter || new Date(p.expiryDate).toISOString().slice(0, 10) === dateFilter)
+                            )
+
                             .map(p => {
                                 const formattedDate = p.expiryDate
                                     ? new Date(p.expiryDate).toLocaleDateString('en-GB', {
@@ -335,18 +401,28 @@ const Dashboard = () => {
 
                                 return (
                                     <tr key={p.id} className={p.quantity < 5 ? 'bg-red-100' : ''}>
-                                        <td className="p-2 border">{p.name}</td>
-                                        <td className="p-2 border">{p.sku}</td>
-                                        <td className="p-2 border">{p.quantity}</td>
-                                        <td className="p-2 border">₹{p.price}</td>
-                                        <td className="p-2 border">{formattedDate}</td>
-                                        <td className="p-2 border">{p.supplier}</td>
-                                        <td className="p-2 border">
-                                            {p.type ? <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">{p.type}</span> : '—'}
+                                        <td className="p-2 bg-gray-200 border">{p.name}</td>
+                                        <td className="p-2 bg-gray-200 border">{p.sku}</td>
+                                        <td className="p-2 bg-gray-200 border">{p.quantity}</td>
+                                        <td className="p-2 bg-gray-200 border">₹{p.price}</td>
+                                        <td className="p-2 bg-gray-200 border">{formattedDate}</td>
+                                        <td className="p-2 bg-gray-200 border">{p.supplier}</td>
+                                        <td className="p-2 bg-gray-200 border">
+                                            {p.type ? <span className="bg-white text-teal-600 font-semibold text-xs px-2 py-1 rounded">{p.type}</span> : '—'}
                                         </td>
-                                        <td className="p-2 border">
-                                            <button onClick={() => handleEdit(p)} className="bg-yellow-500 text-white px-2 py-1 rounded mr-2">Edit</button>
-                                            <button onClick={() => handleDelete(p.id)} className="bg-red-600 text-white px-2 py-1 rounded">Delete</button>
+                                        <td className="p-2 border flex ">
+                                            <button
+                                                onClick={() => handleEdit(p)}
+                                                className="bg-teal-600 hover:bg-yellow-600 text-white px-2 py-1 rounded flex items-center gap-1 mr-2 transition"
+                                            >
+                                                <Pencil size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(p.id)}
+                                                className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded flex items-center gap-1 transition"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
                                         </td>
                                     </tr>
                                 );

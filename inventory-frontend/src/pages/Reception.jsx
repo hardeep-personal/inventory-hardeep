@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import ReceiptPDF from '../components/ReceiptPDF';
 import ReportPDF from '../components/ReportPDF';
+import useWebSocket from '../hooks/useWebSocket';
 
 function Reception() {
     const [prescriptions, setPrescriptions] = useState([]);
@@ -19,7 +20,11 @@ function Reception() {
         const data = await res.json();
         setPrescriptions(data.reverse());
     };
-
+    useWebSocket((message) => {
+        if (message.type === 'REGISTRATION_UPDATED') {
+          fetchRegistration(); // Sync instantly
+        }
+      });
     useEffect(() => { fetchRegistration(); }, []);
 
     const handleChange = (e) => {

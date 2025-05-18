@@ -10,6 +10,7 @@ import SettingsPage from '../pages/SettingsPage';
 import Vaccine from '../pages/Vaccine';
 import Prescription from '../pages/Prescription';
 import Reception from '../pages/Reception';
+import ProtectedRoute from './ProtectedRoute';
 
 export default function Router() {
   return (
@@ -17,15 +18,51 @@ export default function Router() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route element={<Layout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/products" element={<ProductPage />} />
-          <Route path="/purchases" element={<PurchasePage />} />
-          <Route path="/sales" element={<SalePage />} />
-          <Route path="/reports" element={<ReportsPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/vaccine" element={<Vaccine />} />
-          <Route path="/prescription" element={<Prescription />} />
-          <Route path="/receipt" element={<Reception />} />
+          <Route path="/dashboard" element={
+            <ProtectedRoute allowedRoles={['admin', 'reception', 'doctor']}>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/products" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <ProductPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/purchases" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <PurchasePage />
+            </ProtectedRoute>
+          } />
+          <Route path="/sales" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <SalePage />
+            </ProtectedRoute>
+          } />
+          <Route path="/reports" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <ReportsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/settings" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <SettingsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/vaccine" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <Vaccine />
+            </ProtectedRoute>
+          } />
+          <Route path="/prescription" element={
+            <ProtectedRoute allowedRoles={['admin', 'doctor']}>
+              <Prescription />
+            </ProtectedRoute>
+          } />
+          <Route path="/receipt" element={
+            <ProtectedRoute allowedRoles={['admin', 'reception']}>
+              <Reception />
+            </ProtectedRoute>
+          } />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -3,6 +3,8 @@ import { PDFDownloadLink } from '@react-pdf/renderer';
 import PrescriptionPDF from '../components/PrescriptionPDF';
 import ReceiptPDF from '../components/ReceiptPDF';
 import ReportPDF from '../components/ReportPDF';
+import useWebSocket from '../hooks/useWebSocket';
+
 
 function Prescription() {
   const [text, setText] = useState('');
@@ -20,7 +22,11 @@ function Prescription() {
       console.error('Failed to fetch prescriptions', err);
     }
   };
-
+  useWebSocket((message) => {
+    if (message.type === 'REGISTRATION_UPDATED') {
+      fetchPrescriptions();
+    }
+  });
   useEffect(() => {
     fetchPrescriptions();
   }, []);
