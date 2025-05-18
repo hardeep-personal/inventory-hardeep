@@ -8,6 +8,8 @@ import SalePage from '../pages/SalePage';
 import ReportsPage from '../pages/ReportsPage';
 import SettingsPage from '../pages/SettingsPage';
 import Vaccine from '../pages/Vaccine';
+import Prescription from '../pages/Prescription';
+import Reception from '../pages/Reception';
 
 export default function Router() {
   return (
@@ -22,7 +24,8 @@ export default function Router() {
           <Route path="/reports" element={<ReportsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/vaccine" element={<Vaccine />} />
-
+          <Route path="/prescription" element={<Prescription />} />
+          <Route path="/receipt" element={<Reception />} />
         </Route>
       </Routes>
     </BrowserRouter>

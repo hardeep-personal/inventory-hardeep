@@ -7,6 +7,7 @@ function Vaccine() {
   const [vaccines, setVaccines] = useState([]);
   const [users, setUsers] = useState([]);
   const [customMessages, setCustomMessages] = useState({});
+  const [channelSelections, setChannelSelections] = useState({});
 
   const [newVaccine, setNewVaccine] = useState('');
   const [form, setForm] = useState({
@@ -47,23 +48,48 @@ function Vaccine() {
   };
 
   const sendReminder = async (user) => {
-    const customMessage = customMessages[user.id] || `Hi ${user.name}, this is a reminder for your next dose of ${user.vaccine_name}`;
+    const customMessage =
+      customMessages[user.id] ||
+      `Hi ${user.name}, this is a reminder for your next dose of ${user.Vaccine.name}`;
+    const channel = channelSelections[user.id] || 'sms';
 
     try {
-      await axios.post(`${API}/send-reminder`, {
+      await axios.post(`${API}/send-infobip-template`, {
         phone: user.phone,
         message: customMessage,
+        channel,
       });
-      alert('Reminder sent!');
+      alert(`Reminder sent via ${channel.toUpperCase()}!`);
     } catch (err) {
       console.error(err);
-      alert('Failed to send reminder.');
+      alert(`Failed to send ${channel} reminder.`);
     }
   };
-
+  const sendTestMessage = async () => {
+    try {
+      await axios.post(`${API}/send-infobip-template`, {
+        to: '8360700628', // Replace with your test number
+        text: '🧪 This is a test WhatsApp message from the vaccination system.',
+        channel: 'whatsapp',
+      });
+      alert('✅ Test message sent!');
+    } catch (error) {
+      console.error(error);
+      alert('❌ Failed to send test message');
+    }
+  };
+  
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold">💉 Vaccination System</h1>
+
+<button
+  onClick={sendTestMessage}
+  className="bg-purple-600 text-white px-4 py-2 rounded shadow mb-4"
+>
+  🧪 Send Test Message (No Validation)
+</button>
+
 
       {/* Add Vaccine */}
       <div className="bg-white p-4 rounded shadow space-y-2">
@@ -143,7 +169,7 @@ function Vaccine() {
                 <th className="p-2 border">Vaccine</th>
                 <th className="p-2 border">Date</th>
                 <th className="p-2 border">Custom Message</th>
-                <th className="p-2 border">Actions</th>
+                <th className="p-2 border">Send</th>
               </tr>
             </thead>
             <tbody>
@@ -164,12 +190,22 @@ function Vaccine() {
                       }
                     />
                   </td>
-                  <td className="p-2 border">
+                  <td className="p-2 border space-y-1">
+                    <select
+                      className="border px-2 py-1 rounded w-full text-sm"
+                      value={channelSelections[u.id] || 'sms'}
+                      onChange={(e) =>
+                        setChannelSelections({ ...channelSelections, [u.id]: e.target.value })
+                      }
+                    >
+                      <option value="sms">SMS</option>
+                      <option value="whatsapp">WhatsApp</option>
+                    </select>
                     <button
-                      className="bg-indigo-500 text-white px-3 py-1 rounded"
+                      className="mt-1 bg-indigo-500 text-white px-3 py-1 rounded w-full"
                       onClick={() => sendReminder(u)}
                     >
-                      📩 Send SMS
+                      📩 Send
                     </button>
                   </td>
                 </tr>

@@ -11,7 +11,8 @@ const Sidebar = () => {
     { label: 'Reports', path: '/reports' },
     { label: 'Settings', path: '/settings' },
     { label: 'vaccine', path: '/vaccine' },
-
+    { label: 'Prescription', path: '/prescription' },
+    { label: 'Receipt', path: '/receipt' },
   ];
 
   return (
